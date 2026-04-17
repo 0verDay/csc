@@ -1,10 +1,18 @@
 # CS : Captain
 
-本人于2026.4.15开始制作的纯AI机打html小游戏，会放到个人博客的static目录下
+于2026.4.15开始制作的纯AI机打html小游戏，会放到0verDay网站的game目录下
 
-可以通过访问[**yuyi.online/csc.html**](yuyi.online/csc.html)体验
+可以通过访问下方链接游玩
 
-## dev0.1
+```
+0verDay.github.io/game/csc.html
+```
+
+## 开发者
+
+- 轶名 @yuyi-yutie
+
+## dev1
 
 （命名dev为develop版本）
 
@@ -22,7 +30,9 @@
 
 ⑥每个棋子都有100血和5精力，但后续可能会使用js文件更改其基本属性
 
-## dev0.2
+## dev2
+
+2026.4.17更新
 
 ①更新回合系统：回合将定义为游戏内胜负结算的时间单位，玩家规划和执行棋子逻辑的时间单位为行动数，在顶部UI显示中以以下格式命名
 

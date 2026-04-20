@@ -1,0 +1,163 @@
+[gd_scene format=3 uid="uid://b8x7y605w4v3u"]
+
+[ext_resource type="Script" path="res://scripts/card_ui.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.1, 0.1, 0.15, 0.8)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="CardUI" type="PanelContainer"]
+custom_minimum_size = Vector2(200, 100)
+offset_right = 200.0
+offset_bottom = 100.0
+size_flags_vertical = 6
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Header" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TeamDot" type="ColorRect" parent="MarginContainer/VBoxContainer/Header"]
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "Name"
+
+[node name="MoneyLabel" type="Label" parent="MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "$ 800"
+
+[node name="HPRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HPLabel" type="Label" parent="MarginContainer/VBoxContainer/HPRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "HP"
+
+[node name="HPValue" type="Label" parent="MarginContainer/VBoxContainer/HPRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "100"
+
+[node name="HPBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/HPRow"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="EPRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="EPLabel" type="Label" parent="MarginContainer/VBoxContainer/EPRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "精力"
+
+[node name="EPBoxes" type="HBoxContainer" parent="MarginContainer/VBoxContainer/EPRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="StatsRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ShootLabel" type="Label" parent="MarginContainer/VBoxContainer/StatsRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "枪法"
+
+[node name="ShootValue" type="Label" parent="MarginContainer/VBoxContainer/StatsRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "50"
+
+[node name="ReactLabel" type="Label" parent="MarginContainer/VBoxContainer/StatsRow"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "反应"
+
+[node name="ReactValue" type="Label" parent="MarginContainer/VBoxContainer/StatsRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "50"
+
+[node name="WeaponRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WeaponIcon" type="TextureRect" parent="MarginContainer/VBoxContainer/WeaponRow"]
+custom_minimum_size = Vector2(24, 16)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WeaponName" type="Label" parent="MarginContainer/VBoxContainer/WeaponRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 10
+text = "Weapon"
+
+[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/WeaponRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Throwables" type="HBoxContainer" parent="MarginContainer/VBoxContainer/WeaponRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 2
+
+[node name="Slot1" type="ColorRect" parent="MarginContainer/VBoxContainer/WeaponRow/Throwables"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Slot2" type="ColorRect" parent="MarginContainer/VBoxContainer/WeaponRow/Throwables"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Slot3" type="ColorRect" parent="MarginContainer/VBoxContainer/WeaponRow/Throwables"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Slot4" type="ColorRect" parent="MarginContainer/VBoxContainer/WeaponRow/Throwables"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)

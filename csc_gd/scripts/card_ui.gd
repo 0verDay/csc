@@ -70,6 +70,7 @@ func _ready() -> void:
 	_setup_glow_styles()
 	
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_disable_child_mouse_filters($MarginContainer)
 	
 	mouse_entered.connect(_on_mouse_entered)
@@ -137,6 +138,7 @@ func mark_dead() -> void:
 	weapon_name.text = ""
 	
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_default_cursor_shape = Control.CURSOR_ARROW
 	_is_hovered = false
 	_is_selected = false
 	_update_glow_state()

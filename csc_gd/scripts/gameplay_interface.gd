@@ -16,6 +16,8 @@ var _cell_menu: PopupMenu
 var _deploy_menu: PopupMenu
 var _target_cell: BoardCell = null
 
+var _buy_menu_overlay: ColorRect
+
 var piece_ghosts: Dictionary = {}
 var piece_targets: Dictionary = {}
 var piece_deployments: Dictionary = {}
@@ -51,6 +53,43 @@ func _ready() -> void:
 	_deploy_menu.add_item("燃烧弹", 2)
 	_deploy_menu.id_pressed.connect(_on_deploy_menu_id_pressed)
 	_cell_menu.add_child(_deploy_menu)
+	
+	_buy_menu_overlay = ColorRect.new()
+	_buy_menu_overlay.color = Color(0, 0, 0, 0.6)
+	_buy_menu_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_buy_menu_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_buy_menu_overlay.z_index = 100
+	_buy_menu_overlay.hide()
+	_buy_menu_overlay.gui_input.connect(func(e):
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT and e.pressed:
+			_buy_menu_overlay.hide()
+	)
+	add_child(_buy_menu_overlay)
+	
+	var center_container = CenterContainer.new()
+	center_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_buy_menu_overlay.add_child(center_container)
+	
+	var buy_panel = PanelContainer.new()
+	buy_panel.custom_minimum_size = Vector2(480, 360)
+	buy_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.12, 0.13, 0.15, 0.95)
+	panel_style.corner_radius_top_left = 12
+	panel_style.corner_radius_top_right = 12
+	panel_style.corner_radius_bottom_left = 12
+	panel_style.corner_radius_bottom_right = 12
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.4, 0.4, 0.45, 1.0)
+	panel_style.shadow_color = Color(0, 0, 0, 0.5)
+	panel_style.shadow_size = 20
+	buy_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	center_container.add_child(buy_panel)
 	
 	_gather_nodes()
 	_bind_interactions()
@@ -101,6 +140,10 @@ func _gather_nodes() -> void:
 			blue_cards.append(child)
 
 func _input(event: InputEvent) -> void:
+	if _buy_menu_overlay != null and _buy_menu_overlay.visible:
+		if event is InputEventMouse:
+			return
+
 	var board = $BoardContainer
 	
 	if event is InputEventMouseButton:
@@ -128,6 +171,16 @@ func _input(event: InputEvent) -> void:
 		board.position = _drag_start_board_pos + (event.position - _drag_start_mouse_pos)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.keycode == KEY_B and event.pressed and not event.echo:
+		if current_action == 1 and not _is_executing_actions:
+			_buy_menu_overlay.visible = not _buy_menu_overlay.visible
+			if _buy_menu_overlay.visible and _cell_menu.visible:
+				_cell_menu.hide()
+		return
+		
+	if _buy_menu_overlay != null and _buy_menu_overlay.visible:
+		return
+
 	if _is_executing_actions: return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_show_empty_menu()
@@ -323,11 +376,10 @@ func _end_action() -> void:
 	_final_layouts = _calculate_final_layouts()
 	
 	var act_pieces = []
-	for p in piece_targets.keys():
-		if not act_pieces.has(p): act_pieces.append(p)
-	for p in piece_deployments.keys():
-		if not act_pieces.has(p): act_pieces.append(p)
-		
+	for p in yellow_pieces + blue_pieces:
+		if is_instance_valid(p) and p.hp > 0:
+			act_pieces.append(p)
+			
 	if act_pieces.is_empty():
 		print("Action: 结束行动 (空过)")
 		_finish_end_action()
@@ -405,37 +457,75 @@ func _execute_next_action(pieces: Array, index: int) -> void:
 		
 	if duration == 0.0:
 		tween.kill() # 未添加动画的 tween 会抛出报错，主动销毁即可
-		_execute_next_action(pieces, index + 1)
-		return
 		
-	var seq = create_tween()
-	seq.tween_interval(duration)
-	seq.tween_callback(func():
-		if is_instance_valid(proj_node):
-			proj_node.queue_free()
-			
-		if has_proj and target_deploy_cell:
-			var pos = target_deploy_cell.grid_position
-			if deploy_type == 1: # Smoke
-				active_smokes[pos] = 3
-				if active_fires.has(pos):
-					active_fires.erase(pos)
-			elif deploy_type == 0: # Grenade
+	if duration > 0.0:
+		await get_tree().create_timer(duration).timeout
+		
+	if is_instance_valid(proj_node):
+		proj_node.queue_free()
+		
+	if has_proj and target_deploy_cell:
+		var pos = target_deploy_cell.grid_position
+		if deploy_type == 1: # Smoke
+			active_smokes[pos] = 3
+			if active_fires.has(pos):
+				active_fires.erase(pos)
+		elif deploy_type == 0: # Grenade
+			for p in yellow_pieces + blue_pieces:
+				if p.board_position == pos: p.take_damage(50)
+		elif deploy_type == 2: # Molotov
+			if not active_smokes.has(pos):
+				active_fires[pos] = 2
 				for p in yellow_pieces + blue_pieces:
-					if p.board_position == pos: p.take_damage(50)
-			elif deploy_type == 2: # Molotov
-				if not active_smokes.has(pos):
-					active_fires[pos] = 2
-					for p in yellow_pieces + blue_pieces:
-						if p.board_position == pos: p.take_damage(25)
-		
-		_update_board_visuals()
-	)
+					if p.board_position == pos: p.take_damage(25)
 	
-	seq.tween_interval(0.2) # 每个角色的行动之间留出0.2秒观察时间
-	seq.tween_callback(func():
-		_execute_next_action(pieces, index + 1)
-	)
+	_update_board_visuals()
+	
+	var did_shoot = _perform_shoot(piece)
+	if did_shoot:
+		await get_tree().create_timer(0.3).timeout
+	else:
+		await get_tree().create_timer(0.1).timeout
+		
+	_execute_next_action(pieces, index + 1)
+
+func _perform_shoot(piece: ChessPiece) -> bool:
+	if not is_instance_valid(piece) or piece.hp <= 0:
+		return false
+		
+	var enemies = blue_pieces if piece.team == "yellow" else yellow_pieces
+	var valid_targets = []
+	for e in enemies:
+		if is_instance_valid(e) and e.hp > 0:
+			if _check_line_of_sight(piece.board_position, e.board_position):
+				valid_targets.append(e)
+				
+	if valid_targets.size() > 0:
+		valid_targets.shuffle()
+		var target = valid_targets.front()
+		target.take_damage(10)
+		_show_shoot_effect(piece, target)
+		print("Shoot: ", piece.name_str, "(", piece.team, ") 击中了 ", target.name_str, "(", target.team, ")")
+		return true
+		
+	return false
+
+func _show_shoot_effect(attacker: ChessPiece, target: ChessPiece) -> void:
+	var line = Line2D.new()
+	line.width = 4.0
+	line.default_color = Color(1.0, 0.8, 0.2, 0.8) if attacker.team == "yellow" else Color(0.2, 0.6, 1.0, 0.8)
+	
+	var start_pos = attacker.position + (attacker.size / 2.0)
+	var end_pos = target.position + (target.size / 2.0)
+	
+	line.add_point(start_pos)
+	line.add_point(end_pos)
+	line.z_index = 20
+	$BoardContainer.add_child(line)
+	
+	var tw = create_tween()
+	tw.tween_property(line, "modulate:a", 0.0, 0.2)
+	tw.tween_callback(line.queue_free)
 
 func _finish_end_action() -> void:
 	# 1. 提前处理场上的老燃烧弹第二次伤害及老物体的持续时间削减
@@ -632,13 +722,21 @@ func _check_line_of_sight(start_pos: Vector2i, end_pos: Vector2i) -> bool:
 	var y1 = end_pos.y
 
 	var dx = abs(x1 - x0)
-	var dy = -abs(y1 - y0)
-	var sx = 1 if x0 < x1 else -1
-	var sy = 1 if y0 < y1 else -1
-	var err = dx + dy
-
-	while true:
-		var pos = Vector2i(x0, y0)
+	var dy = abs(y1 - y0)
+	
+	var x = x0
+	var y = y0
+	
+	var n = 1 + dx + dy
+	var x_inc = 1 if x1 > x0 else -1
+	var y_inc = 1 if y1 > y0 else -1
+	
+	var error = dx - dy
+	dx *= 2
+	dy *= 2
+	
+	while n > 0:
+		var pos = Vector2i(x, y)
 		# 不检测起点和终点自身是否为障碍物
 		if pos != start_pos and pos != end_pos:
 			if grid_cells.has(pos):
@@ -648,16 +746,17 @@ func _check_line_of_sight(start_pos: Vector2i, end_pos: Vector2i) -> bool:
 			if active_smokes.has(pos):
 				return false
 		
-		if x0 == x1 and y0 == y1:
-			break
-			
-		var e2 = 2 * err
-		if e2 >= dy:
-			err += dy
-			x0 += sx
-		if e2 <= dx:
-			err += dx
-			y0 += sy
+		if error > 0:
+			x += x_inc
+			error -= dy
+		elif error < 0:
+			y += y_inc
+			error += dx
+		else:
+			x += x_inc
+			y += y_inc
+			n -= 1
+		n -= 1
 
 	return true
 

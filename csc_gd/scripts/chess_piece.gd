@@ -35,6 +35,7 @@ var _glow_style: StyleBoxFlat
 func _ready() -> void:
 	randomize()
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	z_index = 10  # 确保棋子永远渲染在格子之上
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
